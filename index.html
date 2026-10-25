@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charm//Robot - AI Controller</title>
+    
+    <!-- Home Screen App Icon & Profile Picture -->
+    <link rel="icon" type="image/png" href="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=500&auto=format&fit=crop&q=60">
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=500&auto=format&fit=crop&q=60">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #070A12 0%, #0B0F19 50%, #111827 100%);
+            color: #E2E8F0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- SPLASH SCREEN --- */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1E293B 0%, #070A12 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .splash-robot-img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #38BDF8;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.5), inset 0 0 15px rgba(56, 189, 248, 0.3);
+            margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite, glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
+            to { box-shadow: 0 0 40px rgba(56, 189, 248, 0.8); }
+        }
+        .splash-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #38BDF8;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        }
+        .splash-subtitle {
+            font-size: 13px;
+            color: #94A3B8;
+            margin-bottom: 35px;
+            letter-spacing: 0.5px;
+        }
+        .enter-btn {
+            background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+            color: #070A12;
+            font-weight: 800;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 30px;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .enter-btn:active { transform: scale(0.97); }
+
+        /* --- MAIN APP INTERFACE --- */
+        #mainApp {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+            width: 100%;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .header-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #38BDF8;
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #38BDF8;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+        }
+        .header-sub {
+            font-size: 11px;
+            color: #34D399;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 2px;
+        }
+        .header-sub::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #34D399;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #34D399;
+            display: inline-block;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 14px;
+            border-radius: 16px;
+            width: 100%;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94A3B8;
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #38BDF8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .stream-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .live-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 12px;
+            letter-spacing: 1px;
+        }
+
+        #videoStream {
+            width: 100%;
+            height: 180px;
+            background: #050811;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .voice-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+            color: white;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-top: 4px;
+        }
+        
+        button.control-btn {
+            background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+            color: white;
+            font-weight: 800;
+            font-size: 11px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            padding: 18px 8px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        button.stop-btn {
+            background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .log-box {
+            background: rgba(3, 7, 18, 0.9);
+            color: #4ADE80;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 12px;
+            height: 90px;
+            overflow-y: auto;
+            border-radius: 10px;
+            font-size: 11px;
+            width: 100%;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. SPLASH SCREEN -->
+    <div id="splashScreen">
+        <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=500&auto=format&fit=crop&q=60" alt="Robot AI" class="splash-robot-img">
+        <div class="splash-title">CHARM//ROBOT</div>
+        <div class="splash-subtitle">AI Gesture & Voice Controlled Assistant</div>
+        <button class="enter-btn" onclick="openApp()">Start Controller</button>
+    </div>
+
+    <!-- 2. MAIN APP INTERFACE -->
+    <div id="mainApp">
+        <div class="header-container">
+            <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=500&auto=format&fit=crop&q=60" alt="Avatar" class="header-avatar">
+            <div>
+                <div class="header-title">Charm//Robot</div>
+                <div class="header-sub">System Online</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <label>Raspberry Pi Address</label>
+            <input type="text" id="piIP" value="http://192.168.1.50:5000">
+        </div>
+
+        <div class="card">
+            <div class="stream-header">
+                <label style="margin: 0;">Live Video Stream</label>
+                <span class="live-badge">● LIVE</span>
+            </div>
+            <img id="videoStream" src="" alt="Video Stream Offline">
+        </div>
+
+        <div class="card">
+            <button class="voice-btn" onclick="startVoice()">🎤 Say "Hey my charm"</button>
+            <p id="voiceStatus" style="font-size: 11px; color: #94A3B8; margin-top: 8px; text-align: center;">Status: Waiting for voice command</p>
+        </div>
+
+        <div class="btn-grid">
+            <div></div>
+            <button class="control-btn" onclick="sendCommand('forward')">FORWARD</button>
+            <div></div>
+            <button class="control-btn" onclick="sendCommand('left')">LEFT</button>
+            <button class="control-btn stop-btn" onclick="sendCommand('stop')">STOP</button>
+            <button class="control-btn" onclick="sendCommand('right')">RIGHT</button>
+            <div></div>
+            <button class="control-btn" onclick="sendCommand('backward')">BACKWARD</button>
+            <div></div>
+        </div>
+
+        <div class="log-box" id="logBox">> Charm//Robot initialized successfully.<br></div>
+    </div>
+
+    <script>
+        function openApp() {
+            const splash = document.getElementById('splashScreen');
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                const baseUrl = getBaseUrl();
+                document.getElementById('videoStream').src = baseUrl + '/video_feed';
+            }, 600);
+        }
+
+        function log(msg) {
+            const box = document.getElementById('logBox');
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            box.innerHTML += `[${time}] ${msg}<br>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function getBaseUrl() {
+            return document.getElementById('piIP').value.trim();
+        }
+
+        function sendCommand(cmd) {
+            const url = getBaseUrl() + '/control';
+            log(`Sending: ${cmd.toUpperCase()}`);
+            
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: cmd })
+            })
+            .then(res => res.json())
+            .then(data => log(`Ack: ${data.command}`))
+            .catch(err => log(`Pi Unreachable (Hardware Offline)`));
+        }
+
+        function startVoice() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech recognition not supported in this browser. Use Chrome.");
+                return;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            
+            document.getElementById('voiceStatus').innerText = "Status: Listening...";
+            log("Listening for wake word...");
+            
+            recognition.onresult = function(event) {
+                const speechToText = event.results[0][0].transcript.toLowerCase();
+                document.getElementById('voiceStatus').innerText = `Heard: "${speechToText}"`;
+                log(`Voice: "${speechToText}"`);
+
+                if (speechToText.includes('hey my charm') || speechToText.includes('my charm')) {
+                    log('Wake-word detected!');
+                    speakResponse("Yes dude");
+                }
+            };
+            
+            recognition.start();
+        }
+
+        function speakResponse(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.rate = 1.0;
+            window.speechSynthesis.speak(speech);
+            log(`Robot Response: "${text}"`);
+        }
+    </script>
+</body>
+</html>
